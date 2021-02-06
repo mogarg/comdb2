@@ -1,0 +1,41 @@
+{
+  "name": "Ubuntu",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": { "VARIANT": "latest" }
+  },
+  "extensions": [
+    "ms-vscode.cmake-tools",
+    "ms-vscode.cpptools",
+    "esbenp.prettier-vscode",
+    "vscodevim.vim"
+  ],
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // The mount creates the /home/$USER/directory with root privileges
+  //  "postCreateCommand": "sudo chown -R heisengarg /home/heisengarg/",
+  "runArgs": [
+    "--cap-add=SYS_PTRACE",
+    "--security-opt",
+    "seccomp=unconfined"
+    //    "-e", "http_proxy=http://proxyeu.bloomberg.com:81",
+    //    "-e", "https_proxy=http://proxyeu.bloomberg.com:81",
+    //    "-e", "no_proxy=.bloomberg.com,10.0.0.0/8,artprod.dev.bloomberg.com,100.0.0.0/8",
+    //    "-e", "NODE_EXTRA_CA_CERTS=/etc/pki/ca-trust/source/anchors/bloomberg_rootca_v2.crt"
+  ],
+  // Set *default* container specific settings.json values on container create.
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/zsh",
+    "http.proxyStrictSSL": false
+  },
+  // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+  "remoteUser": "heisengarg",
+  "mounts": [
+    //    "source=comdb2-sample-database,target=/home/heisengarg/dbs,type=volume"
+    "source=comdb2-home,target=/home/heisengarg/,type=volume",
+    "source=comdb2-opt-bb-bin,target=/opt/bb/bin/,type=volume"
+  ]
+}
