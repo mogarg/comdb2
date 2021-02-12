@@ -309,6 +309,7 @@ function run {
         else
             dbfs="--mount type=tmpfs,destination=/opt/bb:exec"
         fi
+        echo "Mohit ${src}"
         docker run --ulimit nofile=10000:10000 -it -d --privileged $dbfs --network comdb2 \
 		    -v $HOME/bin:${HOME}/bin -v $HOME/.vim:${HOME}/.vim -v ${src}:${HOME}/src \
 		    --name ${name} --hostname ${name} comdb2:dev /usr/sbin/sshd -D &
