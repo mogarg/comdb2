@@ -672,12 +672,15 @@ int verify_del_constraints(struct ireq *iq, void *trans, int *errout)
         int rrn = 0;
         int del_cascade = 0;
         int upd_cascade = 0;
+        int del_null = 0;
         struct backward_ct *bct = &ctrq->ctop.bwdct;
         struct dbtable *currdb = iq->usedb; /* make a copy */
         char *skey = bct ? bct->key : "";
 
         if (is_delete_op(bct->optype) && (bct->flags & CT_DEL_CASCADE))
             del_cascade = 1;
+        else if (is_delete_op(bct->optype) && (bct->flags & CT_DEL_CASCADE))
+            del_null = 1;
         else if (is_update_op(bct->optype) && (bct->flags & CT_UPD_CASCADE))
             upd_cascade = 1;
 
@@ -863,6 +866,9 @@ int verify_del_constraints(struct ireq *iq, void *trans, int *errout)
             /* here, we need to retry to verify the constraint */
             /* sub 1 to go to current constraint again */
             continue;
+        } else if(del_null){
+            // TODO: Add code here
+
         } else if (upd_cascade) {
             int err = 0, idx = 0;
             unsigned long long newgenid;
