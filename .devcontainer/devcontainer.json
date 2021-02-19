@@ -15,6 +15,7 @@
     "--security-opt",
     "seccomp=unconfined"
   ],
+  "postStartCommand": "pmux -n",
   "settings": {
     "terminal.integrated.shell.linux": "/bin/zsh",
     "http.proxyStrictSSL": false,

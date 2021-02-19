@@ -7,6 +7,28 @@
             "label": "refresh lrl",
             "type": "shell",
             "command": "/home/heisengarg/dbs/mohitdbref/refresh_lrl.sh"
+        },
+        {
+            "label": "lookup",
+            "type": "shell",
+            "command": "grep -rnIE --color=always ${input:token} ${workspaceFolder}/${input:workdir} | less -R",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "token",
+            "description": "input token for lookup",
+            "type": "promptString"
+        },
+        {
+            "id": "workdir",
+            "description": "input for lookup location",
+            "default": "",
+            "type": "promptString"
         }
     ]
 }

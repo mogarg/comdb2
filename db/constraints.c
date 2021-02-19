@@ -679,7 +679,7 @@ int verify_del_constraints(struct ireq *iq, void *trans, int *errout)
 
         if (is_delete_op(bct->optype) && (bct->flags & CT_DEL_CASCADE))
             del_cascade = 1;
-        else if (is_delete_op(bct->optype) && (bct->flags & CT_DEL_CASCADE))
+        else if (is_delete_op(bct->optype) && (bct->flags & CT_SETNULL_CASCADE))
             del_null = 1;
         else if (is_update_op(bct->optype) && (bct->flags & CT_UPD_CASCADE))
             upd_cascade = 1;
@@ -826,9 +826,8 @@ int verify_del_constraints(struct ireq *iq, void *trans, int *errout)
             iq->usedb = get_dbtable_by_name(bct->tablename);
             if (iq->debug)
                 reqpushprefixf(iq, "VERBKYCNSTRT CASCADE DEL:");
+
             /* TODO verify we have proper schema change locks */
-
-
             int saved_flgs = iq->osql_flags;
             osql_unset_index_reorder_bit(&iq->osql_flags);
 
@@ -867,7 +866,55 @@ int verify_del_constraints(struct ireq *iq, void *trans, int *errout)
             /* sub 1 to go to current constraint again */
             continue;
         } else if(del_null){
-            // TODO: Add code here
+            int err = 0, idx = 0;
+            (void) err;
+            (void) idx;
+            unsigned long long newgenid;
+            int newkeylen = 0;
+            if (iq->debug) {
+                reqprintf(iq, "VERBKYCNSTRT CASCADE NULL TBL %s RRN %d ", bct->tablename, rrn);
+            }
+
+            /* verify against source table...must be not found */
+            rc = bdb_lock_tablename_read(thedb->bdb_env, bct->tablename, trans);
+            if (rc != 0) {
+                *errout = OP_FAILED_INTERNAL + ERR_FORM_KEY;
+                close_constraint_table_cursor(cur);
+                return RC_INTERNAL_RETRY;
+            }
+            iq->usedb = get_dbtable_by_name(bct->tablename);
+            newkeylen = getkeysize(iq->usedb, bct->sixnum);
+
+            if (gbl_fk_allow_superset_keys && newkeylen > bct->sixlen) {
+                memcpy(bct->newkey + bct->sixlen, key + bct->sixlen,
+                       newkeylen - bct->sixlen);
+            } else {
+                newkeylen = bct->sixlen;
+            }
+
+            if (iq->debug)
+                reqpushprefixf(iq, "VERBKYCNSTRT CASCADE NULL:");
+
+            /* TODO verify we have proper schema change locks */
+            int saved_flgs = iq->osql_flags;
+            osql_unset_index_reorder_bit(&iq->osql_flags);
+            (void) saved_flgs;
+
+            if(iq->usedb) {
+                rc = upd_record(iq, trans, NULL,                               /*primkey*/
+                                rrn, genid, (const unsigned char *)ondisk_tag, /*.ONDISK_IX_0*/
+                                (const unsigned char *)ondisk_tag + strlen(ondisk_tag),
+                                (unsigned char *)bct->newkey, /*p_buf_rec*/
+                                (const unsigned char *)bct->newkey + newkeylen, NULL /*p_buf_vrec*/,
+                                NULL /*p_buf_vrec_end*/, NULL,                        /*fldnullmap*/
+                                NULL,                                                 /*updCols*/
+                                NULL,                                                 /*blobs*/
+                                0,                                                    /*maxblobs*/
+                                &newgenid, -1ULL, -1ULL, &err, &idx, BLOCK2_UPDKL, 0, /*blkpos*/
+                                UPDFLAGS_CASCADE | RECFLAGS_DONT_LOCK_TBL);
+            } else {
+                rc = ERR_NO_SUCH_TABLE;
+            }
 
         } else if (upd_cascade) {
             int err = 0, idx = 0;
