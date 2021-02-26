@@ -23,4 +23,5 @@ RUN sudo apt-get update && sudo apt-get -y install --no-install-recommends \
     tcl                  \
     uuid-dev             \
     zlib1g-dev           \
-    dialog
+    dialog               \
+    jq tcl-dev
