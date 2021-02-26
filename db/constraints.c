@@ -900,12 +900,15 @@ int verify_del_constraints(struct ireq *iq, void *trans, int *errout)
             osql_unset_index_reorder_bit(&iq->osql_flags);
             (void) saved_flgs;
 
+            char nullkey[MAXKEYLEN];
+            stag_set_fields_null(bct->tablename, ondisk_tag, skey, nullkey);
+
             if(iq->usedb) {
                 rc = upd_record(iq, trans, NULL,                               /*primkey*/
                                 rrn, genid, (const unsigned char *)ondisk_tag, /*.ONDISK_IX_0*/
                                 (const unsigned char *)ondisk_tag + strlen(ondisk_tag),
-                                (unsigned char *)bct->newkey, /*p_buf_rec*/
-                                (const unsigned char *)bct->newkey + newkeylen, NULL /*p_buf_vrec*/,
+                                (unsigned char *)nullkey, /*p_buf_rec*/
+                                (const unsigned char *)nullkey + keylen, NULL /*p_buf_vrec*/,
                                 NULL /*p_buf_vrec_end*/, NULL,                        /*fldnullmap*/
                                 NULL,                                                 /*updCols*/
                                 NULL,                                                 /*blobs*/
