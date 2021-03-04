@@ -3855,6 +3855,16 @@ static int stag_to_stag_field(const char *inbuf, char *outbuf, int flags,
     return 0;
 }
 
+//DEBUG ONLY: REMOVE ONCE DONE
+void stag_print_fields(const char *table, const char *tag) {
+    struct schema *schema;
+    schema = find_tag_schema(table, tag);
+    for(int fieldno = 0; fieldno < schema->nmembers; fieldno++) {
+        struct field *field = &schema->member[fieldno];
+        printf("%s", field->name);
+    }
+}
+
 int stag_set_key_null(const char *table, const char *tag, const char *inkey,
                       const int keylen, char *outkey) {
     struct schema *schema;

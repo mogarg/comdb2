@@ -272,6 +272,8 @@ int ctag_to_stag_blobs_tz(const char *table, const char *ctag,
                           const char *tzname);
 int ctag_to_ctag_buf(const char *table, const char *ftag, void *inbufp,
                      const char *ttag, void *outbufp);
+//DEBUG ONLY: REMOVE ONCE DONE
+void stag_print_fields(const char *table, const char *tag);
 // stag_set_key_null takes a tablename and and stag 
 int stag_set_key_null(const char *table, const char *stag, const char *inkey, 
                       const int keylen, char *outkey);

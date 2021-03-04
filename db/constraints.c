@@ -705,6 +705,12 @@ int verify_del_constraints(struct ireq *iq, void *trans, int *errout)
             return rc;
         }
 
+        // DEBUG: Remove this when done 
+        char debugondisk_tag[MAXTAGLEN];
+        snprintf(debugondisk_tag, sizeof(debugondisk_tag) - 1, ".ONDISK_IX_%d",
+                 bct->sixnum);
+        stag_print_fields(bct->tablename, debugondisk_tag);
+
         if (rc != IX_FND && rc != IX_FNDMORE) {
             // key was not found on source table, so nothing to do
             if (iq->debug) {
