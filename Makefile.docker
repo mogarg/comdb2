@@ -1,0 +1,28 @@
+DOCKER=docker
+IMAGE="bloomberg/comdb2-dev"
+VERSION="latest"
+CONTAINER="comdb2dev"
+CURRDIR=$(shell pwd)
+
+.PHONY: buildi
+buildi: Dockerfile
+	$(DOCKER) build -t $(IMAGE):$(VERSION) .
+
+.PHONY: run
+run:
+	$(DOCKER) run --mount type=volume,source=comdb2-opt-bb-bin,target=/opt/bb/bin/ --mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated --name=$(CONTAINER) -it $(IMAGE):$(VERSION) default
+
+.PHONY: build
+build:
+	$(DOCKER) run -it --mount type=volume,source=comdb2-opt-bb-bin,target=/opt/bb/bin/ --mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated --name=$(CONTAINER) $(IMAGE):$(VERSION) build
+
+.PHONY: clean
+clean:
+	docker rm -f $(CONTAINER)
+
+.PHONY: logs
+logs:
+	docker log $(CONTAINER)
+
+.PHONY: remove-build
+clean-buildi: clean buildi

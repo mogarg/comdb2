@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  comdb2:
+    container_name: comdb2db 
+    hostname: comdb2db
+    image: bloomberg/comdb2-dev:latest
+    command: /opt/bb/bin/pmux -n
+    volumes:
+      - comdb2-opt-bb-bin:/opt/bb/bin/
+      - comdb2-dbs:/home/heisengarg/dbs
+    expose: [5105]
+    cap_add:
+      - ALL
+
+# docker compose prepends the project name
+# while creating a volume, but since we are
+# trying to use a volume populated by external
+# install in a separate container, we want to
+# use that volume and not let docker-compose
+# manage one for us
+volumes:
+  comdb2-opt-bb-bin:
+    external:
+      name: comdb2-opt-bb-bin
+  comdb2-dbs:
