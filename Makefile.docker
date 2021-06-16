@@ -8,13 +8,21 @@ CURRDIR=$(shell pwd)
 buildi: Dockerfile
 	$(DOCKER) build -t $(IMAGE):$(VERSION) .
 
+.PHONY: runc
+runc:
+	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs --mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ --mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated --name=$(CONTAINER) -it $(IMAGE):$(VERSION) default
+
+.PHONY: newdb
+newdb:
+	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs --mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ --name=$(CONTAINER) -it $(IMAGE):$(VERSION) db mgarg51db 
+
 .PHONY: run
 run:
-	$(DOCKER) run --mount type=volume,source=comdb2-opt-bb-bin,target=/opt/bb/bin/ --mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated --name=$(CONTAINER) -it $(IMAGE):$(VERSION) default
+	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs --mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ --name=$(CONTAINER) -it $(IMAGE):$(VERSION) run mgarg51db 
 
 .PHONY: build
 build:
-	$(DOCKER) run -it --mount type=volume,source=comdb2-opt-bb-bin,target=/opt/bb/bin/ --mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated --name=$(CONTAINER) $(IMAGE):$(VERSION) build
+	$(DOCKER) run -it --mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ --mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated --name=$(CONTAINER) $(IMAGE):$(VERSION) build
 
 .PHONY: clean
 clean:
