@@ -32,6 +32,9 @@ RUN sudo apt-get update && sudo apt-get -y install --no-install-recommends \
     gawk                 \
     valgrind             \
     cscope               \
-    figlet
+    figlet               \
+    iputils-ping         \
+    net-tools
 
+EXPOSE 5105 
 COPY ./entrypoint.sh /usr/local/bin/

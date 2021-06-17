@@ -1,19 +1,77 @@
 version: "3.9"
 services:
-  comdb2:
-    #    container_name: comdb2db 
-    hostname: comdb2db
+  comdb2-node1:
+    container_name: comdb2-node1
+    hostname: node1 
     image: bloomberg/comdb2-dev:latest
     working_dir: /home/heisengarg
-    command: default 
+    command: ["run", "mgarg51db"]
     volumes:
       - comdb2-opt-bb:/opt/bb/
       - comdb2-dbs:/home/heisengarg/dbs
     expose: [5105]
     cap_add:
       - ALL
+  comdb2-node2:
+    container_name: comdb2-node2
+    hostname: node2
+    image: bloomberg/comdb2-dev:latest
+    working_dir: /home/heisengarg
+    command: ["cprun", "mgarg51db", "node1"]
+    volumes:
+      - comdb2-opt-bb:/opt/bb/
+    depends_on:
+      - comdb2-node1
+    expose: [5105]
+    cap_add:
+      - ALL
+  comdb2-node3:
+    container_name: comdb2-node3
+    hostname: node3
+    image: bloomberg/comdb2-dev:latest
+    working_dir: /home/heisengarg
+    command: ["cprun", "mgarg51db", "node1"]]
+    volumes:
+      - comdb2-opt-bb:/opt/bb/
+    depends_on:
+      - comdb2-node1
+    expose: [5105]
+    cap_add:
+      - ALL
+  comdb2-node4:
+    container_name: comdb2-node4
+    hostname: node4
+    image: bloomberg/comdb2-dev:latest
+    working_dir: /home/heisengarg
+    command: ["cprun", "mgarg51db", "node1"]
+    volumes:
+      - comdb2-opt-bb:/opt/bb/
+    depends_on:
+      - comdb2-node1
+    expose: [5105]
+    cap_add:
+      - ALL
+  client:
+    container_name: client 
+    hostname: client 
+    image: bloomberg/comdb2-dev:latest
+    working_dir: /home/heisengarg
+    command: ["client", "mgarg51db", "node1"]
+    volumes:
+      - comdb2-opt-bb:/opt/bb/
+      - comdb2-dbs:/home/heisengarg/dbs
+    expose: [5105]
+    depends_on:
+      - comdb2-node1
+      - comdb2-node2
+      - comdb2-node3
+      - comdb2-node4
+
+    cap_add:
+      - ALL
     stdin_open: true # docker run -i
     tty: true
+
 
 # docker compose prepends the project name
 # while creating a volume, but since we are

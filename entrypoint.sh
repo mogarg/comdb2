@@ -50,6 +50,25 @@ new_db() {
 	$COMDB2 --create --dir "$DBSDIR/$DBNAME" "$DBNAME"
 }
 
+
+clusterize() {
+    if [ -z "$1" ]; then
+        echo "no dbname passed using testdb" 
+    else
+        DBNAME="$1"
+    fi
+    echo "$DBNAME"
+    echo "$2"
+
+    if [ -z "$2" ]; then
+        echo "No hosts passed. Pass hosts as mach1,mach2,..,machn"
+        exit 1
+    fi
+
+    echo "cluster nodes $(IFS=',' read -ra hosts <<< "$2"; IFS=" " echo "${hosts[@]}")
+" >> "$DBSDIR/$DBNAME/$DBNAME.lrl"
+}
+
 run_db() {
 	if ! COMDB2="$(command -v comdb2)"; then
 		echo "Failed to find comdb2"
@@ -67,6 +86,38 @@ run_db() {
     fi
 
 	pmux -n && $COMDB2 --lrl "$DBSDIR/$DBNAME/$DBNAME.lrl" "$DBNAME"
+}
+
+copy_run_db() {
+	if ! CPCOMDB2="$(command -v copycomdb2)"; then
+		echo "Failed to find comdb2"
+		exit 1
+	fi
+    if [ -z "$1" ]; then
+        echo "no dbname passed using testdb" 
+    else
+        DBNAME="$1"
+    fi
+
+    FROMHOST="$2"
+
+    $CPCOMDB2 "$FROMHOST:$DBSDIR/$DBNAME/$DBNAME.lrl"
+
+    run_db "$1"
+}
+
+run_client() {
+	if ! CDB2SQL="$(command -v cdb2sql)"; then
+		echo "Failed to find comdb2"
+		exit 1
+	fi
+    if [ -z "$1" ]; then
+        echo "no dbname passed using testdb" 
+    else
+        DBNAME="$1"
+    fi
+    ping "$2" 
+#    $CDB2SQL "$DBNAME"
 }
 
 case "$1" in
@@ -87,6 +138,18 @@ db)
 run)
 	shift
     run_db "$*"
+    ;;
+cprun)
+    shift
+    copy_run_db "$*"
+    ;;
+client)
+    shift
+    run_client "$*"
+    ;;
+clust)
+    shift
+    clusterize "$*"
     ;;
 *)
 	exec "$@"
