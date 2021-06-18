@@ -10,24 +10,41 @@ buildi: Dockerfile
 
 .PHONY: runc
 runc:
-	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs --mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ --mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated --name=$(CONTAINER) -it $(IMAGE):$(VERSION) default
+	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs \
+	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
+	   	--mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated \
+	   	--name=$(CONTAINER) -it $(IMAGE):$(VERSION) default
 
 .PHONY: newdb
 newdb:
-	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs --mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ --name=$(CONTAINER) -it $(IMAGE):$(VERSION) db mgarg51db 
+	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs \
+	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
+		--name=$(CONTAINER) -it $(IMAGE):$(VERSION) db mgarg51db 
 
 .PHONY: run
 run:
-	$(DOCKER) run -p 5105:5105 -p 19000:19000 --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs --mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ --name=$(CONTAINER) -it $(IMAGE):$(VERSION) run mgarg51db 
+	$(DOCKER) run -p 5105:5105 -p 19000:19000 \
+		--mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs \
+	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
+		--name=$(CONTAINER) -it $(IMAGE):$(VERSION) run mgarg51db 
+
+.PHONY: dbrun
+dbrun:
+	$(DOCKER) run -p 5105:5105 -p 19000:19000 \
+		--mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs \
+		--mount type=volume,source=comdb2-lrls,target=/home/heisengarg/lrls \
+	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
+		--name=$(CONTAINER) -it $(IMAGE):$(VERSION) dbrun mgarg51db 
 
 .PHONY: build
 build:
-	$(DOCKER) run -it --mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ --mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated --name=$(CONTAINER) $(IMAGE):$(VERSION) build
+	$(DOCKER) run -it --mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
+	   	--mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated \
+	   	--name=$(CONTAINER) $(IMAGE):$(VERSION) build
 
 .PHONY: clust
 clust:
-	$(DOCKER) run -it --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs --name=$(CONTAINER) $(IMAGE):$(VERSION) clust mgarg51db "node1,node2,node3,node4"
-
+	./clusterize.sh mgarg51db "node1,node2,node3,node4"
 
 .PHONY: clean
 clean:
