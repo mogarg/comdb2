@@ -1,6 +1,7 @@
 #!/bin/zsh
 
 set -e
+set -x
 
 # The script runs the comdb dev container and persists
 # using three directories
@@ -10,7 +11,9 @@ set -e
 #
 # The binding is only relevant for building
 
-DBSDIR="/home/heisengarg/dbs/"
+HOMEDIR="/home/heisengarg/"
+DBSDIR="$HOMEDIR/dbs/"
+CLUSTVOLDIR="$HOMEDIR/volumes/" # directory to copy the database to when building a cluster
 DBNAME="testdb" 
 
 build() {
@@ -57,16 +60,32 @@ clusterize() {
     else
         DBNAME="$1"
     fi
-    echo "$DBNAME"
-    echo "$2"
 
     if [ -z "$2" ]; then
         echo "No hosts passed. Pass hosts as mach1,mach2,..,machn"
         exit 1
     fi
+ 
+    if ! CPCOMDB2="$(command -v copycomdb2)"; then
+		echo "Failed to find comdb2"
+		exit 1
+	fi
+    
+    IFS=',' read -rA hosts <<< "$2"
 
-    echo "cluster nodes $(IFS=',' read -ra hosts <<< "$2"; IFS=" " echo "${hosts[@]}")
+    echo "cluster nodes $(IFS=" " echo "${hosts[@]}")
 " >> "$DBSDIR/$DBNAME/$DBNAME.lrl"
+
+    [[ ! -d "$CLUSTVOLDIR" ]] && echo "volumes directory not found. Forgot to mount?" && exit 2
+    [[ ! -w "$CLUSTVOLDIR" ]] && sudo chown -R $(whoami) "$CLUSTVOLDIR"
+
+    for host in ${hosts[@]}; do
+        $CPCOMDB2 "$DBSDIR/$DBNAME/$DBNAME.lrl" "$CLUSTVOLDIR/$host-dbs/$DBNAME"
+
+        # Hack: I don't want the lrl dir path modified to $HOME/volumes/node1-dbs/dbname etc since
+        # $HOME/volumes/node1-dbs is just a mount and this would be mounted to $HOME/dbs/dbname 
+        cp "$DBSDIR/$DBNAME/$DBNAME.lrl" "$CLUSTVOLDIR/$host-dbs/$DBNAME/$DBNAME.lrl"
+    done
 }
 
 run_db() {
@@ -127,29 +146,29 @@ build)
 clean)
 	clean_build
 	;;
-default)
+sh)
 	figlet "$hostname"
 	/bin/zsh
 	;;
 db)
 	shift
-	new_db "$*"
+	new_db $*
 	;;
 run)
 	shift
-    run_db "$*"
+    run_db $*
     ;;
 cprun)
     shift
-    copy_run_db "$*"
+    copy_run_db $*
     ;;
 client)
     shift
-    run_client "$*"
+    run_client $*
     ;;
 clust)
     shift
-    clusterize "$*"
+    clusterize $*
     ;;
 *)
 	exec "$@"

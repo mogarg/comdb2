@@ -3,6 +3,7 @@ IMAGE="bloomberg/comdb2-dev"
 VERSION="latest"
 CONTAINER="comdb2dev"
 CURRDIR=$(shell pwd)
+LCLVOLDIR="$(shell pwd)/volumes"
 
 .PHONY: buildi
 buildi: Dockerfile
@@ -13,13 +14,15 @@ runc:
 	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 	   	--mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated \
-	   	--name=$(CONTAINER) -it $(IMAGE):$(VERSION) default
+	   	--mount type=bind,source=$(LCLVOLDIR),target=/home/heisengarg/volumes \
+		-w /home/heisengarg --hostname=$(CONTAINER) --name=$(CONTAINER)\
+	   	 -it $(IMAGE):$(VERSION) sh 
 
 .PHONY: newdb
 newdb:
 	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
-		--name=$(CONTAINER) -it $(IMAGE):$(VERSION) db mgarg51db 
+		-it $(IMAGE):$(VERSION) db mgarg51db 
 
 .PHONY: run
 run:
@@ -28,23 +31,18 @@ run:
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 		--name=$(CONTAINER) -it $(IMAGE):$(VERSION) run mgarg51db 
 
-.PHONY: dbrun
-dbrun:
-	$(DOCKER) run -p 5105:5105 -p 19000:19000 \
-		--mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs \
-		--mount type=volume,source=comdb2-lrls,target=/home/heisengarg/lrls \
-	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
-		--name=$(CONTAINER) -it $(IMAGE):$(VERSION) dbrun mgarg51db 
-
 .PHONY: build
 build:
 	$(DOCKER) run -it --mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 	   	--mount type=bind,source="$(CURRDIR)",target=/home/heisengarg/comdb2,consistency=delegated \
-	   	--name=$(CONTAINER) $(IMAGE):$(VERSION) build
+	   	$(IMAGE):$(VERSION) build
 
 .PHONY: clust
 clust:
-	./clusterize.sh mgarg51db "node1,node2,node3,node4"
+	$(DOCKER) run -it --mount type=volume,source=comdb2-dbs,target=/home/heisengarg/dbs \
+	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
+	   	--mount type=bind,source=$(LCLVOLDIR),target=/home/heisengarg/volumes,consistency=delegated \
+		-it $(IMAGE):$(VERSION) clust mgarg51db "node1,node2,node3"  
 
 .PHONY: clean
 clean:

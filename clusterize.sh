@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+set -x
+
 # sets up cluster stuff for comdb2 
 # - creats a host directory in the current location as a volumes
 # folder. creates subdirectory for the master copy and directories
@@ -12,7 +14,6 @@
 #      and so on...
 #
 # emits a cluster nodes node1 node2 node3 to the lrl file in the master copy container 
-# 
 
 
 HOMEDIR="/home/heisengarg"
@@ -20,8 +21,8 @@ DBS="$HOMEDIR/dbs" # dbs volume location in the container
 DBSMNTVOL="comdb2-dbs" # host volume name that mounts to the DBS dir
 IMAGE="heisengarg/devbox"
 VERSION="latest"
-
-LOCALVOL="volumes" # directory to store must db data on host
+VOLUMES="$HOMEDIR/volumes"
+LOCALVOLUMES="$(pwd)/volumes"
 
 if [[ "$#" -ne 2 ]]; then
     echo "Usage: $0 <dbname> <hosts>" >&2
@@ -46,17 +47,18 @@ IFS="," read -rA hosts <<< "$2"
 $DOCKER run --rm --mount type=volume,source="$DBSMNTVOL",target="$DBS" \
     $IMAGE:$VERSION -e DBNAME="$DBNAME" -e HOSTS="$2" clust "$DBNAME" "$HOSTS"
 
-mkdir -p "$VOLUMES/master"
 for host in ${hosts[@]}; do
-    mkdir -p "$VOLUMES/$host-dbs"
-done    
-
-$DOCKER run --rm --mount type=volume,source="$DBSMNTVOL",target="$DBS" \
-    -w "$HOME" $IMAGE:$VERSION cp dbs ./volumes/master 
-
-for host in ${hosts[@]}; do
-    $COPYCOMDB2 -m "$VOLUMES/master/$DBNAME/$DBNAME.lrl" "$VOLUMES/master/$DBNAME/" "$VOLUMES/$host-dbs"
+    mkdir -p "$$LOCALVOLUMES/$host-dbs"
 done
 
+$DOCKER container create --name dummy \
+    --mount type=volume,source="$DBSMNTVOL",target="$DBS" \
+    --mount type=volume,source="$LOCALVOLUMES",target="$VOLUMES" "$IMAGE:$VERSION" 
 
+$DOCKER cp dummy:"$HOMEDIR/dbs/$DBNAME" ./volumes/master 
+$DOCKER rm dummy 1>&2 2>/dev/null
+
+#for host in ${hosts[@]}; do
+#    $COPYCOMDB2 -m "$VOLUMES/master/$DBNAME/$DBNAME.lrl" "$VOLUMES/master/$DBNAME/" "$VOLUMES/$host-dbs"
+#done
 
