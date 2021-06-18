@@ -1,0 +1,63 @@
+version: "3.9"
+services:
+  comdb2-node1:
+    container_name: node1
+    hostname: node1 
+    image: bloomberg/comdb2-dev:latest
+    working_dir: /home/heisengarg
+    command: ["run", "mgarg51db"]
+    volumes:
+      - ./volumes/bin:/opt/bb/bin
+      - ./volumes/node2-dbs:/home/heisengarg/dbs
+    networks:
+      - cluster-net
+    cap_add:
+      - ALL
+  comdb2-node2:
+    container_name: node2
+    hostname: node2
+    image: bloomberg/comdb2-dev:latest
+    working_dir: /home/heisengarg
+    command: ["run", "mgarg51db"]
+    volumes:
+      - ./volumes/bin:/opt/bb/bin
+      - ./volumes/node2-dbs:/home/heisengarg/dbs
+    networks:
+      - cluster-net
+    cap_add:
+      - ALL
+  comdb2-node3:
+    container_name: node3
+    hostname: node3
+    image: bloomberg/comdb2-dev:latest
+    working_dir: /home/heisengarg
+    command: ["run", "mgarg51db"]
+    volumes:
+      - ./volumes/bin:/opt/bb/bin
+      - ./volumes/node3-dbs:/home/heisengarg/dbs
+    networks:
+      - cluster-net
+    cap_add:
+      - ALL
+
+# docker compose prepends the project name
+# while creating a volume, but since we are
+# trying to use a volume populated by external
+# install in a separate container, we want to
+# use that volume and not let docker-compose
+# manage one for us
+#volumes:
+#  comdb2-opt-bb:
+#    name: comdb2-opt-bb
+#  comdb2-replicas:
+#    name: comdb2-replicas
+
+networks:
+  cluster-net:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.16.238.0/24
+      - subnet: 2001:3984:3989::/64

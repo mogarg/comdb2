@@ -79,9 +79,10 @@ clusterize() {
     [[ ! -d "$CLUSTVOLDIR" ]] && echo "volumes directory not found. Forgot to mount?" && exit 2
     [[ ! -w "$CLUSTVOLDIR" ]] && sudo chown -R $(whoami) "$CLUSTVOLDIR"
 
+    cp -R /opt/bb/bin "$CLUSTVOLDIR/bin"
+
     for host in ${hosts[@]}; do
         $CPCOMDB2 "$DBSDIR/$DBNAME/$DBNAME.lrl" "$CLUSTVOLDIR/$host-dbs/$DBNAME"
-
         # Hack: I don't want the lrl dir path modified to $HOME/volumes/node1-dbs/dbname etc since
         # $HOME/volumes/node1-dbs is just a mount and this would be mounted to $HOME/dbs/dbname 
         cp "$DBSDIR/$DBNAME/$DBNAME.lrl" "$CLUSTVOLDIR/$host-dbs/$DBNAME/$DBNAME.lrl"
@@ -103,6 +104,10 @@ run_db() {
         echo "$DBNAME.lrl file doesn't exist. Did you build db?"
         exit 2
     fi
+
+    # make a directory for logs
+    [[ ! -d /opt/bb/var/log/cdb2 ]] && sudo mkdir -p /opt/bb/var/log/cdb2
+    sudo chown -R $(whoami) /opt/bb/
 
 	pmux -n && $COMDB2 --lrl "$DBSDIR/$DBNAME/$DBNAME.lrl" "$DBNAME"
 }
